@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>證券批次下單 XML 產生器</title>
+    <style>
+        body {
+            font-family: "Helvetica Neue", Helvetica, Arial, "PingFang TC", "Hiragino Sans GB", "Microsoft JhengHei", sans-serif;
+            background-color: #f4f6f9;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        h2 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 25px;
+        }
+        /* 分頁標籤樣式 */
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid #ddd;
+            margin-bottom: 20px;
+        }
+        .tab-btn {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background: none;
+            border: none;
+            outline: none;
+            transition: 0.3s;
+            color: #7f8c8d;
+            font-weight: bold;
+        }
+        .tab-btn.active {
+            color: #3498db;
+            border-bottom: 3px solid #3498db;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        /* 表單樣式 */
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        /* 表格樣式 */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            margin-bottom: 15px;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 12px;
+            text-align: center;
+        }
+        th {
+            background-color: #f8f9fa;
+        }
+        /* 按鈕樣式 */
+        .btn {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+        .btn-add { background-color: #2ecc71; color: white; }
+        .btn-add:hover { background-color: #27ae60; }
+        .btn-delete { background-color: #e74c3c; color: white; padding: 5px 10px; }
+        .btn-delete:hover { background-color: #c0392b; }
+        .btn-submit { 
+            background-color: #3498db; 
+            color: white; 
+            width: 100%; 
+            font-size: 16px; 
+            padding: 12px;
+            margin-top: 20px;
+        }
+        .btn-submit:hover { background-color: #2980b9; }
+        
+        .stock-input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .stock-input-group input {
+            flex: 1;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>證券批次下單 XML 產生器</h2>
+
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('cathay')">國泰證券</button>
+        <button class="tab-btn" onclick="switchTab('huanan')">華南銀行</button>
+    </div>
+
+    <div class="form-group">
+        <label for="ssId">身分證字號 (SSID)：</label>
+        <input type="text" id="ssId" placeholder="請輸入身分證字號" maxlength="10">
+    </div>
+    
+    <div class="form-group">
+        <label for="dealAcc">銀行代號 (DealAcc)：</label>
+        <input type="text" id="dealAcc" placeholder="請輸入銀行代號">
+    </div>
+
+    <div class="form-group">
+        <label for="dealAccUi">證券帳戶資料 (DealAccUI)：</label>
+        <input type="text" id="dealAccUi" placeholder="請輸入證券帳戶資料">
+    </div>
+
+    <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+
+    <h3>股票代號清單 (ID)</h3>
+    <div class="stock-input-group">
+        <input type="text" id="stockInput" placeholder="輸入股票代號（例如：2330）" onkeypress="if(event.keyCode==13) addStock()">
+        <button class="btn btn-add" onclick="addStock()">新增代號</button>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>編號</th>
+                <th>股票代號</th>
+                <th>預覽 (ID)</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody id="stockTableBody">
+            </tbody>
+    </table>
+
+    <button class="btn btn-submit" onclick="generateXML()">產生並下載 XML 檔案</button>
+</div>
+
+<script>
+    // 當前選擇的分頁，預設為國泰
+    let currentTab = 'cathay';
+    // 儲存股票代號的陣列
+    let stockList = [];
+
+    // 分頁切換功能
+    function switchTab(tabName) {
+        currentTab = tabName;
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        if(tabName === 'cathay') {
+            document.querySelectorAll('.tab-btn')[0].classList.add('active');
+        } else {
+            document.querySelectorAll('.tab-btn')[1].classList.add('active');
+        }
+        // 這裡可以根據分頁不同給予預設值（如果需要的話）
+    }
+
+    // 新增股票代號到表格
+    function addStock() {
+        const stockInput = document.getElementById('stockInput');
+        const stockCode = stockInput.value.trim();
+
+        if (stockCode === '') {
+            alert('請輸入股票代號！');
+            return;
+        }
+
+        // 避免重複輸入
+        if (stockList.includes(stockCode)) {
+            alert('此股票代號已在清單中！');
+            return;
+        }
+
+        stockList.push(stockCode);
+        stockInput.value = ''; // 清空輸入框
+        renderTable();
+    }
+
+    // 刪除單一股票代號
+    function removeStock(index) {
+        stockList.splice(index, 1);
+        renderTable();
+    }
+
+    // 渲染表格內容
+    function renderTable() {
+        const tbody = document.getElementById('stockTableBody');
+        tbody.innerHTML = '';
+
+        if (stockList.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" style="color: #999;">目前無股票代號，請由上方新增</td></tr>';
+            return;
+        }
+
+        stockList.forEach((stock, index) => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${index + 1}</td>
+                <td><strong>${stock}</strong></td>
+                <td>${stock}.TW</td>
+                <td><button class="btn btn-delete" onclick="removeStock(${index})">刪除</button></td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    // 產生 XML 並觸發下載
+    function generateXML() {
+        const ssId = document.getElementById('ssId').value.trim();
+        const dealAcc = document.getElementById('dealAcc').value.trim();
+        const dealAccUi = document.getElementById('dealAccUi').value.trim();
+
+        if (!ssId || !dealAcc || !dealAccUi) {
+            alert('請填寫完整的身分證、銀行代號與證券帳戶資料！');
+            return;
+        }
+
+        if (stockList.length === 0) {
+            alert('請至少新增一個股票代號！');
+            return;
+        }
+
+        // 建立 XML 字串結構 (使用 Big5 編碼宣告)
+        let xmlContent = '<?xml version="1.0" encoding="big5"?>\n';
+        xmlContent += '<MdjOrdersFile CompactMode="1">\n';
+        xmlContent += '\t<Orders>\n';
+
+        // 根據股票清單組裝迴圈
+        stockList.forEach(stock => {
+            const idValue = `${stock}.TW`;
+            xmlContent += `\t\t<Order Vol="1" VolMatch="0" VolCancel="0" ActionFlag="0" OrderStatus="0" DP="0" SettleCurrency="0" Price="0.000000" BS="B" Cond="R" DealType="0" TT="11" OT="0" PT="1" Offset="5" Session="0" OFT="16" DealTime="1703606400" OrderDateTime="-1" ConfirmDateTime="-1" ID="${idValue}" ID2="" Name="" TSID="CTYAP" EmergeBroker="" EmergeBrokerName="" CreatorAcc="" DealAcc="${dealAcc}" DealAccUI="${dealAccUi}" SSID="${ssId}" IBPT="999" IBCond="999" PriceStop="0.000000" ETT="-1" GTCRule="0" GTCStartTime="0" GTCStopDate="0" GTCStopPrice="0.000000" GTCWebID="" GTCWebSeq="" ChkUI="-1"/>\n`;
+        });
+
+        xmlContent += '\t</Orders>\n';
+        xmlContent += '</MdjOrdersFile>';
+
+        // 檔名根據分頁區分
+        const filename = `${currentTab === 'cathay' ? '國泰證券' : '華南銀行'}_batch_orders.xml`;
+
+        // 將字串轉為 Blob 並透過瀏覽器下載 (雖然宣告 big5，網頁下載預設多為 UTF-8，若券商軟體對 utf-8 判斷有嚴格限制，建議以文字編輯器檢查)
+        const blob = new Blob([xmlContent], { type: 'text/xml;charset=utf-8;' });
+        const link = document.createElement('a');
+        
+        if (navigator.msSaveBlob) { // 支援 IE
+            navigator.msSaveBlob(blob, filename);
+        } else {
+            link.href = URL.createObjectURL(blob);
+            link.setAttribute('download', filename);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    }
+
+    // 初始化渲染空表格
+    renderTable();
+</script>
+
+</body>
+</html>
