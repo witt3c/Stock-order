@@ -23,7 +23,6 @@
             --success-hover: #27ae60;
             --danger-color: #e74c3c;
             --danger-hover: #c0392b;
-            --hr-color: #eeeeee;
         }
 
         /* 深色模式變數覆蓋 */
@@ -44,7 +43,7 @@
 
         * {
             box-sizing: border-box;
-            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+            transition: background-color 0.2s, color 0.2s, border-color 0.2s;
         }
 
         body {
@@ -155,7 +154,7 @@
             font-size: 14px;
         }
 
-        .form-group input {
+        .form-group input, .stock-input-group textarea {
             width: 100%;
             padding: 10px;
             border: 1px solid var(--input-border);
@@ -163,6 +162,7 @@
             font-size: 14px;
             background-color: var(--input-bg);
             color: var(--text-color);
+            font-family: inherit;
         }
 
         /* 右側股票區域 */
@@ -177,23 +177,18 @@
 
         .stock-input-group {
             display: flex;
+            flex-direction: column;
             gap: 10px;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
         }
 
-        .stock-input-group input {
-            flex: 1;
-            padding: 10px;
-            border: 1px solid var(--input-border);
-            border-radius: 4px;
-            font-size: 14px;
-            background-color: var(--input-bg);
-            color: var(--text-color);
+        .stock-input-group textarea {
+            resize: vertical;
         }
 
         /* 表格樣式 */
         .table-container {
-            max-height: 400px;
+            max-height: 450px;
             overflow-y: auto;
             border: 1px solid var(--border-color);
             border-radius: 4px;
@@ -228,7 +223,7 @@
             font-weight: bold;
         }
 
-        .btn-add { background-color: var(--success-color); color: white; }
+        .btn-add { background-color: var(--success-color); color: white; font-size: 15px; padding: 12px; }
         .btn-add:hover { background-color: var(--success-hover); }
         .btn-delete { background-color: var(--danger-color); color: white; padding: 6px 12px; }
         .btn-delete:hover { background-color: var(--danger-hover); }
@@ -290,8 +285,10 @@
         <h3 class="panel-title">股票代號管理 (ID)</h3>
         
         <div class="stock-input-group">
-            <input type="text" id="stockInput" placeholder="輸入股票代號（例如：2330，按 Enter 鍵亦可新增）" onkeypress="if(event.keyCode==13) addStock()">
-            <button class="btn btn-add" onclick="addStock()">新增代號</button>
+            <textarea id="stockInput" rows="4" placeholder="請在此輸入或貼上股票代號。
+支援多筆貼上，可用：逗號(,)、頓號(、)、空格或換行區隔。
+（例如：2330,2454、2317 2882）"></textarea>
+            <button class="btn btn-add" onclick="addStock()">解析並新增至清單</button>
         </div>
 
         <div class="table-container">
@@ -319,7 +316,6 @@
     // 深淺色模式切換
     function toggleTheme() {
         document.body.classList.toggle('dark-mode');
-        // 可選：將使用者偏好儲存在 localStorage
         const isDarkMode = document.body.classList.contains('dark-mode');
         localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
     }
@@ -336,24 +332,63 @@
         element.classList.add('active');
     }
 
-    // 新增股票代號到表格
+    // 解析並新增股票代號
     function addStock() {
         const stockInput = document.getElementById('stockInput');
-        const stockCode = stockInput.value.trim();
+        const rawInput = stockInput.value.trim();
 
-        if (stockCode === '') {
+        if (rawInput === '') {
             alert('請輸入股票代號！');
             return;
         }
 
-        if (stockList.includes(stockCode)) {
-            alert('此股票代號已在清單中！');
-            return;
-        }
+        // 支援正則分割：半形逗號(,)、全形逗號(，)、頓號(、)、換行(\n)、空白(\s)
+        const rawItems = rawInput.split(/[\s,，、\n]+/);
 
-        stockList.push(stockCode);
+        let addedCount = 0;
+        let errorLengthItems = [];
+        let duplicateItems = [];
+
+        rawItems.forEach(item => {
+            const cleanedItem = item.trim();
+            if (cleanedItem === '') return; // 濾掉空白項
+
+            // 防呆規格檢查：必須剛好為 4 位數純數字
+            if (!/^\d{4}$/.test(cleanedItem)) {
+                errorLengthItems.push(cleanedItem);
+                return;
+            }
+
+            // 檢查是否重複輸入
+            if (stockList.includes(cleanedItem)) {
+                duplicateItems.push(cleanedItem);
+                return;
+            }
+
+            // 通過驗證，寫入全域陣列
+            stockList.push(cleanedItem);
+            addedCount++;
+        });
+
+        // 清空輸入框並重新渲染表格
         stockInput.value = '';
         renderTable();
+
+        // 統整提示視窗
+        let alertMessage = '';
+        if (addedCount > 0) {
+            alertMessage += `成功新增 ${addedCount} 筆股票代號。\n`;
+        }
+        if (duplicateItems.length > 0) {
+            alertMessage += `⚠️ 提示：代號 [ ${duplicateItems.join(', ')} ] 已在清單中，已自動忽略。\n`;
+        }
+        if (errorLengthItems.length > 0) {
+            alertMessage += `❌ 錯誤：[ ${errorLengthItems.join(', ')} ] 不符合 4 位數純數字規格，不予匯入。\n`;
+        }
+
+        if (alertMessage !== '') {
+            alert(alertMessage);
+        }
     }
 
     // 刪除單一股票代號
