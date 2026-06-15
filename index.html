@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>證券批次下單 XML 產生器</title>
     <style>
-        /* CSS 變數定義 */
         :root {
             --bg-color: #f4f6f9;
             --container-bg: #ffffff;
@@ -30,7 +29,6 @@
             --footer-link: #3498db;
         }
 
-        /* 深色模式變數覆蓋 */
         body.dark-mode {
             --bg-color: #1a1a1a;
             --container-bg: #2d2d2d;
@@ -65,7 +63,6 @@
             min-height: 100vh;
         }
 
-        /* 頂部導覽列 */
         .navbar {
             background-color: var(--nav-bg);
             color: var(--nav-text);
@@ -83,7 +80,6 @@
             margin: 0;
         }
 
-        /* 滑動主題切換器組件 */
         .theme-switch-container {
             display: flex;
             align-items: center;
@@ -141,7 +137,6 @@
             transform: translateX(24px);
         }
 
-        /* 主體佈局（左右分欄） */
         .main-container {
             flex: 1;
             padding: 20px;
@@ -167,7 +162,6 @@
         .left-panel { width: 35%; }
         .right-panel { width: 65%; }
 
-        /* 分頁標籤 */
         .tabs {
             display: flex;
             border-bottom: 2px solid var(--border-color);
@@ -192,7 +186,6 @@
             border-bottom: 3px solid var(--primary-color);
         }
 
-        /* 表單與輸入框 */
         .form-group { margin-bottom: 18px; }
         .form-group label { display: block; margin-bottom: 6px; font-weight: bold; font-size: 14px; }
         .form-group input, .stock-input-group textarea {
@@ -206,7 +199,6 @@
             font-family: inherit;
         }
 
-        /* 右側股票區域 */
         .panel-title {
             margin-top: 0;
             margin-bottom: 20px;
@@ -220,7 +212,6 @@
         .stock-input-group textarea { resize: vertical; }
         .button-row { display: flex; gap: 10px; }
 
-        /* 表格樣式 */
         .table-container {
             max-height: 450px;
             overflow-y: auto;
@@ -231,8 +222,6 @@
         table { width: 100%; border-collapse: collapse; }
         th, td { padding: 12px; text-align: center; border-bottom: 1px solid var(--border-color); }
         th { background-color: var(--table-th-bg); position: sticky; top: 0; z-index: 1; font-weight: bold; }
-
-        /* 按鈕樣式 */
         .btn { padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; font-weight: bold; }
         .btn-add { flex: 1; background-color: var(--success-color); color: white; font-size: 15px; padding: 12px; }
         .btn-add:hover { background-color: var(--success-hover); }
@@ -243,7 +232,6 @@
         .btn-submit { background-color: var(--primary-color); color: white; width: 100%; font-size: 16px; padding: 12px; margin-top: 10px; }
         .btn-submit:hover { background-color: var(--primary-hover); }
 
-        /* 頁尾樣式 */
         footer {
             background-color: var(--footer-bg);
             color: var(--footer-text);
@@ -293,8 +281,8 @@
             </div>
 
             <div class="form-group">
-                <label for="dealAccUi">證券帳戶資料 (DealAccUI，可含中文)：</label>
-                <input type="text" id="dealAccUi" placeholder="請輸入證券帳戶資料（例如：證-8889-1173434-陳浚維）">
+                <label for="dealAccUi">證券帳戶資料 (DealAccUI)：</label>
+                <input type="text" id="dealAccUi" placeholder="請輸入證券帳戶資料（例如：證-0000-000000-XXX）">
             </div>
 
             <button class="btn btn-submit" onclick="generateXML()">產生並下載 XML 檔案</button>
@@ -339,11 +327,7 @@
 <script>
     let currentTab = 'cathay';
     let stockList = [];
-
-    // ==========================================
-    // 終極防亂碼核心：將中文字轉換為 XML 萬國通用編碼 (Numeric Character Reference)
-    // 這樣匯出的檔案不需要任何外部二進位轉碼，券商的 Big5 系統讀取時會自動還原成正確的繁體中文！
-    // ==========================================
+    
     function escapeXmlChinese(str) {
         return str.replace(/[^\x00-\xff]/g, function(ch) {
             return "&#" + ch.charCodeAt(0) + ";";
@@ -450,19 +434,13 @@
         const dealAccUi = document.getElementById('dealAccUi').value.trim();
         if (!ssId || !dealAcc || !dealAccUi) { alert('請填寫左側完整欄位！'); return; }
         if (stockList.length === 0) { alert('請在右側新增股票代號！'); return; }
-
-        // 將可能包含中文字的欄位，轉化為安全的 XML 實體編碼
         const safeDealAccUi = escapeXmlChinese(dealAccUi);
-
         let xmlContent = '<?xml version="1.0" encoding="big5"?>\n<MdjOrdersFile CompactMode="1">\n\t<Orders>\n';
         stockList.forEach(stock => {
             xmlContent += `\t\t<Order Vol="1" VolMatch="0" VolCancel="0" ActionFlag="0" OrderStatus="0" DP="0" SettleCurrency="0" Price="0.000000" BS="B" Cond="R" DealType="0" TT="11" OT="0" PT="1" Offset="5" Session="0" OFT="16" DealTime="1703606400" OrderDateTime="-1" ConfirmDateTime="-1" ID="${stock}.TW" ID2="" Name="" TSID="CTYAP" EmergeBroker="" EmergeBrokerName="" CreatorAcc="" DealAcc="${dealAcc}" DealAccUI="${safeDealAccUi}" SSID="${ssId}" IBPT="999" IBCond="999" PriceStop="0.000000" ETT="-1" GTCRule="0" GTCStartTime="0" GTCStopDate="0" GTCStopPrice="0.000000" GTCWebID="" GTCWebSeq="" ChkUI="-1"/>\n`;
         });
         xmlContent += '\t</Orders>\n</MdjOrdersFile>';
-
         const filename = `${currentTab === 'cathay' ? '國泰證券' : '華南銀行'}_batch_orders.xml`;
-        
-        // 由於中文字已經完美轉成 Unicode 實體編碼（全英文符號），此處直接導出絕對不卡死、絕無亂碼
         const blob = new Blob([xmlContent], { type: 'text/xml;charset=big5;' });
         const link = document.createElement('a');
         link.href = URL.createObjectURL(blob);
