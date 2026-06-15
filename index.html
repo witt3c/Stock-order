@@ -25,6 +25,9 @@
             --danger-hover: #c0392b;
             --warning-color: #f39c12;
             --warning-hover: #d35400;
+            --footer-bg: #2c3e50;
+            --footer-text: #bdc3c7;
+            --footer-link: #3498db;
         }
 
         /* 深色模式變數覆蓋 */
@@ -41,6 +44,9 @@
             --table-th-bg: #3a3a3a;
             --primary-color: #2980b9;
             --primary-hover: #3498db;
+            --footer-bg: #111111;
+            --footer-text: #888888;
+            --footer-link: #2980b9;
         }
 
         * {
@@ -54,6 +60,9 @@
             margin: 0;
             padding: 0;
             color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
         }
 
         /* 頂部導覽列 */
@@ -133,11 +142,16 @@
         }
 
         /* 主體佈局（左右分欄） */
+        .main-container {
+            flex: 1; /* 讓內容撐開，確保頁尾固定在底部 */
+            padding: 20px;
+        }
+
         .main-layout {
             display: table;
             width: 100%;
             max-width: 1400px;
-            margin: 20px auto;
+            margin: 0 auto;
             border-spacing: 20px 0;
         }
 
@@ -150,13 +164,8 @@
             box-shadow: 0 4px 6px rgba(0,0,0,0.05);
         }
 
-        .left-panel {
-            width: 35%;
-        }
-
-        .right-panel {
-            width: 65%;
-        }
+        .left-panel { width: 35%; }
+        .right-panel { width: 65%; }
 
         /* 分頁標籤 */
         .tabs {
@@ -184,17 +193,8 @@
         }
 
         /* 表單與輸入框 */
-        .form-group {
-            margin-bottom: 18px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 6px;
-            font-weight: bold;
-            font-size: 14px;
-        }
-
+        .form-group { margin-bottom: 18px; }
+        .form-group label { display: block; margin-bottom: 6px; font-weight: bold; font-size: 14px; }
         .form-group input, .stock-input-group textarea {
             width: 100%;
             padding: 10px;
@@ -216,21 +216,9 @@
             font-size: 18px;
         }
 
-        .stock-input-group {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-
-        .stock-input-group textarea {
-            resize: vertical;
-        }
-
-        .button-row {
-            display: flex;
-            gap: 10px;
-        }
+        .stock-input-group { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+        .stock-input-group textarea { resize: vertical; }
+        .button-row { display: flex; gap: 10px; }
 
         /* 表格樣式 */
         .table-container {
@@ -240,53 +228,45 @@
             border-radius: 4px;
         }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        th, td {
-            padding: 12px;
-            text-align: center;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        th {
-            background-color: var(--table-th-bg);
-            position: sticky;
-            top: 0;
-            z-index: 1;
-            font-weight: bold;
-        }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px; text-align: center; border-bottom: 1px solid var(--border-color); }
+        th { background-color: var(--table-th-bg); position: sticky; top: 0; z-index: 1; font-weight: bold; }
 
         /* 按鈕樣式 */
-        .btn {
-            padding: 10px 15px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: bold;
-        }
-
+        .btn { padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; font-weight: bold; }
         .btn-add { flex: 1; background-color: var(--success-color); color: white; font-size: 15px; padding: 12px; }
         .btn-add:hover { background-color: var(--success-hover); }
-        
         .btn-batch-delete { flex: 1; background-color: var(--warning-color); color: white; font-size: 15px; padding: 12px; }
         .btn-batch-delete:hover { background-color: var(--warning-hover); }
-
         .btn-delete { background-color: var(--danger-color); color: white; padding: 6px 12px; }
         .btn-delete:hover { background-color: var(--danger-hover); }
-        
-        .btn-submit { 
-            background-color: var(--primary-color); 
-            color: white; 
-            width: 100%; 
-            font-size: 16px; 
-            padding: 12px;
-            margin-top: 10px;
-        }
+        .btn-submit { background-color: var(--primary-color); color: white; width: 100%; font-size: 16px; padding: 12px; margin-top: 10px; }
         .btn-submit:hover { background-color: var(--primary-hover); }
+
+        /* 頁尾樣式 */
+        footer {
+            background-color: var(--footer-bg);
+            color: var(--footer-text);
+            text-align: center;
+            padding: 15px 20px;
+            font-size: 14px;
+            box-shadow: 0 -2px 4px rgba(0,0,0,0.05);
+            margin-top: 40px;
+        }
+
+        .footer-links {
+            margin-top: 5px;
+        }
+
+        .footer-links a {
+            color: var(--footer-link);
+            text-decoration: none;
+            margin: 0 10px;
+        }
+
+        .footer-links a:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
@@ -304,69 +284,72 @@
     </div>
 </nav>
 
-<div class="main-layout">
-    
-    <div class="left-panel">
-        <div class="tabs">
-            <button class="tab-btn active" onclick="switchTab('cathay', this)">國泰證券</button>
-            <button class="tab-btn" onclick="switchTab('huanan', this)">華南銀行</button>
-        </div>
+<div class="main-container">
+    <div class="main-layout">
+        <div class="left-panel">
+            <div class="tabs">
+                <button class="tab-btn active" onclick="switchTab('cathay', this)">國泰證券</button>
+                <button class="tab-btn" onclick="switchTab('huanan', this)">華南銀行</button>
+            </div>
 
-        <div class="form-group">
-            <label for="ssId">身分證字號 (SSID)：</label>
-            <input type="text" id="ssId" placeholder="請輸入身分證字號" maxlength="10">
-        </div>
-        
-        <div class="form-group">
-            <label for="dealAcc">銀行代號 (DealAcc)：</label>
-            <input type="text" id="dealAcc" placeholder="請輸入銀行代號">
-        </div>
-
-        <div class="form-group">
-            <label for="dealAccUi">證券帳戶資料 (DealAccUI)：</label>
-            <input type="text" id="dealAccUi" placeholder="請輸入證券帳戶資料">
-        </div>
-
-        <button class="btn btn-submit" onclick="generateXML()">產生並下載 XML 檔案</button>
-    </div>
-
-    <div class="right-panel">
-        <h3 class="panel-title">股票代號管理 (ID)</h3>
-        
-        <div class="stock-input-group">
-            <textarea id="stockInput" rows="4" placeholder="請在此輸入或貼上股票代號。
-支援多筆處理，可用：逗號(,)、頓號(、)、空格或換行區隔。
-（例如：2330,2454、2317 2882）"></textarea>
+            <div class="form-group">
+                <label for="ssId">身分證字號 (SSID)：</label>
+                <input type="text" id="ssId" placeholder="請輸入身分證字號" maxlength="10">
+            </div>
             
-            <div class="button-row">
-                <button class="btn btn-add" onclick="addStock()">解析並新增至清單</button>
-                <button class="btn btn-batch-delete" onclick="batchDeleteStock()">從清單中批次移除</button>
+            <div class="form-group">
+                <label for="dealAcc">銀行代號 (DealAcc)：</label>
+                <input type="text" id="dealAcc" placeholder="請輸入銀行代號">
+            </div>
+
+            <div class="form-group">
+                <label for="dealAccUi">證券帳戶資料 (DealAccUI)：</label>
+                <input type="text" id="dealAccUi" placeholder="請輸入證券帳戶資料">
+            </div>
+
+            <button class="btn btn-submit" onclick="generateXML()">產生並下載 XML 檔案</button>
+        </div>
+
+        <div class="right-panel">
+            <h3 class="panel-title">股票代號管理 (ID)</h3>
+            
+            <div class="stock-input-group">
+                <textarea id="stockInput" rows="4" placeholder="請在此輸入或貼上股票代號。可用逗號(,)、頓號(、)、空格或換行區隔。"></textarea>
+                <div class="button-row">
+                    <button class="btn btn-add" onclick="addStock()">解析並新增至清單</button>
+                    <button class="btn btn-batch-delete" onclick="batchDeleteStock()">從清單中批次移除</button>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 15%;">編號</th>
+                            <th style="width: 35%;">股票代號</th>
+                            <th style="width: 35%;">預覽產出值 (ID)</th>
+                            <th style="width: 15%;">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="stockTableBody"></tbody>
+                </table>
             </div>
         </div>
-
-        <div class="table-container">
-            <table>
-                <thead>
-                    <tr>
-                        <th style="width: 15%;">編號</th>
-                        <th style="width: 35%;">股票代號</th>
-                        <th style="width: 35%;">預覽產出值 (ID)</th>
-                        <th style="width: 15%;">操作</th>
-                    </tr>
-                </thead>
-                <tbody id="stockTableBody">
-                    </tbody>
-            </table>
-        </div>
     </div>
-
 </div>
+
+<footer>
+    <div>© 2026 | witt3c digital</div>
+    <div class="footer-links">
+        <a href="terms.html" target="_blank">服務條款</a> | 
+        <a href="privacy.html" target="_blank">隱私條款</a>
+    </div>
+</footer>
 
 <script>
     let currentTab = 'cathay';
     let stockList = [];
 
-    // 深淺色模式切換 (由滑動開關觸發)
     function toggleTheme() {
         const checkbox = document.getElementById('themeCheckbox');
         if (checkbox.checked) {
@@ -378,37 +361,26 @@
         }
     }
 
-    // 初始化檢查使用者上次選擇的主題並設定開關狀態
     if (localStorage.getItem('theme') === 'dark') {
         document.body.classList.add('dark-mode');
         document.getElementById('themeCheckbox').checked = true;
     }
 
-    // 分頁切換功能
     function switchTab(tabName, element) {
         currentTab = tabName;
         document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
         element.classList.add('active');
     }
 
-    // 輔助函式：用來將使用者的輸入文字拆解為乾淨的代號陣列
     function parseInputText(text) {
         if (!text) return [];
-        // 支援正則分割：半形逗號(,)、全形逗號(，)、頓號(、)、換行(\n)、空白(\s)
-        return text.split(/[\s,，、\n]+/)
-                   .map(item => item.trim())
-                   .filter(item => item !== '');
+        return text.split(/[\s,，、\n]+/).map(item => item.trim()).filter(item => item !== '');
     }
 
-    // 1. 解析並新增股票代號
     function addStock() {
         const stockInput = document.getElementById('stockInput');
         const rawInput = stockInput.value.trim();
-
-        if (rawInput === '') {
-            alert('請在上方文字框輸入欲新增的股票代號！');
-            return;
-        }
+        if (rawInput === '') { alert('請輸入股票代號！'); return; }
 
         const rawItems = parseInputText(rawInput);
         let addedCount = 0;
@@ -416,43 +388,26 @@
         let duplicateItems = [];
 
         rawItems.forEach(item => {
-            // 防呆規格檢查：必須剛好為 4 位數純數字
-            if (!/^\d{4}$/.test(item)) {
-                errorLengthItems.push(item);
-                return;
-            }
-
-            // 檢查是否重複輸入
-            if (stockList.includes(item)) {
-                duplicateItems.push(item);
-                return;
-            }
-
+            if (!/^\d{4}$/.test(item)) { errorLengthItems.push(item); return; }
+            if (stockList.includes(item)) { duplicateItems.push(item); return; }
             stockList.push(item);
             addedCount++;
         });
 
-        stockInput.value = ''; // 清空輸入框
+        stockInput.value = '';
         renderTable();
 
-        // 提示訊息
         let alertMessage = '';
         if (addedCount > 0) alertMessage += `成功新增 ${addedCount} 筆股票代號。\n`;
-        if (duplicateItems.length > 0) alertMessage += `⚠️ 提示：代號 [ ${duplicateItems.join(', ')} ] 已在清單中，自動忽略。\n`;
+        if (duplicateItems.length > 0) alertMessage += `⚠️ 提示：代號 [ ${duplicateItems.join(', ')} ] 已在清單中。\n`;
         if (errorLengthItems.length > 0) alertMessage += `❌ 錯誤：[ ${errorLengthItems.join(', ')} ] 不符合 4 位數純數字規格。\n`;
-        
         if (alertMessage !== '') alert(alertMessage);
     }
 
-    // 2. 批次刪除輸入框中的股票代號
     function batchDeleteStock() {
         const stockInput = document.getElementById('stockInput');
         const rawInput = stockInput.value.trim();
-
-        if (rawInput === '') {
-            alert('請在上方文字框輸入欲批量刪除的股票代號！');
-            return;
-        }
+        if (rawInput === '') { alert('請輸入欲批量刪除的股票代號！'); return; }
 
         const rawItems = parseInputText(rawInput);
         let deletedCount = 0;
@@ -460,99 +415,58 @@
 
         rawItems.forEach(item => {
             const index = stockList.indexOf(item);
-            if (index !== -1) {
-                stockList.splice(index, 1); // 從陣列中移除
-                deletedCount++;
-            } else {
-                notFoundItems.push(item); // 清單中本來就沒有這顆股票
-            }
+            if (index !== -1) { stockList.splice(index, 1); deletedCount++; } 
+            else { notFoundItems.push(item); }
         });
 
-        stockInput.value = ''; // 清空輸入框
+        stockInput.value = '';
         renderTable();
 
-        // 提示訊息
         let alertMessage = '';
-        if (deletedCount > 0) alertMessage += `成功從清單中移除 ${deletedCount} 筆股票代號。\n`;
-        if (notFoundItems.length > 0) alertMessage += `ℹ️ 備註：[ ${notFoundItems.join(', ')} ] 本就不在清單中，無須移除。\n`;
-        
+        if (deletedCount > 0) alertMessage += `成功移除 ${deletedCount} 筆股票代號。\n`;
+        if (notFoundItems.length > 0) alertMessage += `ℹ️ [ ${notFoundItems.join(', ')} ] 本就不在清單中。\n`;
         if (alertMessage !== '') alert(alertMessage);
     }
 
-    // 刪除個別單一股票代號
-    function removeStock(index) {
-        stockList.splice(index, 1);
-        renderTable();
-    }
+    function removeStock(index) { stockList.splice(index, 1); renderTable(); }
 
-    // 渲染表格內容
     function renderTable() {
         const tbody = document.getElementById('stockTableBody');
         tbody.innerHTML = '';
-
         if (stockList.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4" style="color: var(--text-muted); padding: 30px;">目前無股票代號，請由上方輸入框新增</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="4" style="color: var(--text-muted); padding: 30px;">目前無股票代號</td></tr>';
             return;
         }
-
         stockList.forEach((stock, index) => {
             const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td>${index + 1}</td>
-                <td><strong>${stock}</strong></td>
-                <td><span style="font-family: monospace;">${stock}.TW</span></td>
-                <td><button class="btn btn-delete" onclick="removeStock(${index})">刪除</button></td>
-            `;
+            tr.innerHTML = `<td>${index + 1}</td><td><strong>${stock}</strong></td><td><span style="font-family: monospace;">${stock}.TW</span></td><td><button class="btn btn-delete" onclick="removeStock(${index})">刪除</button></td>`;
             tbody.appendChild(tr);
         });
     }
 
-    // 產生 XML 並觸發下載
     function generateXML() {
         const ssId = document.getElementById('ssId').value.trim();
         const dealAcc = document.getElementById('dealAcc').value.trim();
         const dealAccUi = document.getElementById('dealAccUi').value.trim();
+        if (!ssId || !dealAcc || !dealAccUi) { alert('請填寫左側完整欄位！'); return; }
+        if (stockList.length === 0) { alert('請在右側新增股票代號！'); return; }
 
-        if (!ssId || !dealAcc || !dealAccUi) {
-            alert('請填寫左側完整的身分證、銀行代號與證券帳戶資料！');
-            return;
-        }
-
-        if (stockList.length === 0) {
-            alert('請在右側至少新增一個股票代號！');
-            return;
-        }
-
-        let xmlContent = '<?xml version="1.0" encoding="big5"?>\n';
-        xmlContent += '<MdjOrdersFile CompactMode="1">\n';
-        xmlContent += '\t<Orders>\n';
-
+        let xmlContent = '<?xml version="1.0" encoding="big5"?>\n<MdjOrdersFile CompactMode="1">\n\t<Orders>\n';
         stockList.forEach(stock => {
-            const idValue = `${stock}.TW`;
-            xmlContent += `\t\t<Order Vol="1" VolMatch="0" VolCancel="0" ActionFlag="0" OrderStatus="0" DP="0" SettleCurrency="0" Price="0.000000" BS="B" Cond="R" DealType="0" TT="11" OT="0" PT="1" Offset="5" Session="0" OFT="16" DealTime="1703606400" OrderDateTime="-1" ConfirmDateTime="-1" ID="${idValue}" ID2="" Name="" TSID="CTYAP" EmergeBroker="" EmergeBrokerName="" CreatorAcc="" DealAcc="${dealAcc}" DealAccUI="${dealAccUi}" SSID="${ssId}" IBPT="999" IBCond="999" PriceStop="0.000000" ETT="-1" GTCRule="0" GTCStartTime="0" GTCStopDate="0" GTCStopPrice="0.000000" GTCWebID="" GTCWebSeq="" ChkUI="-1"/>\n`;
+            xmlContent += `\t\t<Order Vol="1" VolMatch="0" VolCancel="0" ActionFlag="0" OrderStatus="0" DP="0" SettleCurrency="0" Price="0.000000" BS="B" Cond="R" DealType="0" TT="11" OT="0" PT="1" Offset="5" Session="0" OFT="16" DealTime="1703606400" OrderDateTime="-1" ConfirmDateTime="-1" ID="${stock}.TW" ID2="" Name="" TSID="CTYAP" EmergeBroker="" EmergeBrokerName="" CreatorAcc="" DealAcc="${dealAcc}" DealAccUI="${dealAccUi}" SSID="${ssId}" IBPT="999" IBCond="999" PriceStop="0.000000" ETT="-1" GTCRule="0" GTCStartTime="0" GTCStopDate="0" GTCStopPrice="0.000000" GTCWebID="" GTCWebSeq="" ChkUI="-1"/>\n`;
         });
-
-        xmlContent += '\t</Orders>\n';
-        xmlContent += '</MdjOrdersFile>';
+        xmlContent += '\t</Orders>\n</MdjOrdersFile>';
 
         const filename = `${currentTab === 'cathay' ? '國泰證券' : '華南銀行'}_batch_orders.xml`;
         const blob = new Blob([xmlContent], { type: 'text/xml;charset=utf-8;' });
         const link = document.createElement('a');
-        
-        if (navigator.msSaveBlob) {
-            navigator.msSaveBlob(blob, filename);
-        } else {
-            link.href = URL.createObjectURL(blob);
-            link.setAttribute('download', filename);
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
+        link.href = URL.createObjectURL(blob);
+        link.setAttribute('download', filename);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     }
-
-    // 初始化渲染空表格
     renderTable();
 </script>
-
 </body>
 </html>
