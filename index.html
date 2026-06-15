@@ -23,6 +23,8 @@
             --success-hover: #27ae60;
             --danger-color: #e74c3c;
             --danger-hover: #c0392b;
+            --warning-color: #f39c12;
+            --warning-hover: #d35400;
         }
 
         /* 深色模式變數覆蓋 */
@@ -72,23 +74,62 @@
             margin: 0;
         }
 
-        /* 主題切換按鈕（太陽/月亮） */
-        .theme-toggle {
-            background: none;
-            border: none;
-            font-size: 24px;
-            cursor: pointer;
-            color: var(--nav-text);
-            outline: none;
+        /* 滑動主題切換器組件 */
+        .theme-switch-container {
             display: flex;
             align-items: center;
-            justify-content: center;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
+            gap: 8px;
         }
-        .theme-toggle:hover {
-            background-color: rgba(255, 255, 255, 0.1);
+        
+        .theme-icon {
+            font-size: 18px;
+            user-select: none;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 26px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #bdc3c7;
+            transition: .3s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .3s;
+            border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        input:checked + .slider {
+            background-color: var(--primary-color);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(24px);
         }
 
         /* 主體佈局（左右分欄） */
@@ -186,6 +227,11 @@
             resize: vertical;
         }
 
+        .button-row {
+            display: flex;
+            gap: 10px;
+        }
+
         /* 表格樣式 */
         .table-container {
             max-height: 450px;
@@ -223,8 +269,12 @@
             font-weight: bold;
         }
 
-        .btn-add { background-color: var(--success-color); color: white; font-size: 15px; padding: 12px; }
+        .btn-add { flex: 1; background-color: var(--success-color); color: white; font-size: 15px; padding: 12px; }
         .btn-add:hover { background-color: var(--success-hover); }
+        
+        .btn-batch-delete { flex: 1; background-color: var(--warning-color); color: white; font-size: 15px; padding: 12px; }
+        .btn-batch-delete:hover { background-color: var(--warning-hover); }
+
         .btn-delete { background-color: var(--danger-color); color: white; padding: 6px 12px; }
         .btn-delete:hover { background-color: var(--danger-hover); }
         
@@ -237,22 +287,21 @@
             margin-top: 10px;
         }
         .btn-submit:hover { background-color: var(--primary-hover); }
-
-        /* 太陽月亮圖示 */
-        .icon-sun { display: inline; }
-        .icon-moon { display: none; }
-        body.dark-mode .icon-sun { display: none; }
-        body.dark-mode .icon-moon { display: inline; }
     </style>
 </head>
 <body>
 
 <nav class="navbar">
     <div class="navbar-title">證券批次下單 XML 產生器</div>
-    <button class="theme-toggle" onclick="toggleTheme()" title="切換深淺色模式">
-        <span class="icon-sun">☀️</span>
-        <span class="icon-moon">🌙</span>
-    </button>
+    
+    <div class="theme-switch-container">
+        <span class="theme-icon">☀️</span>
+        <label class="switch">
+            <input type="checkbox" id="themeCheckbox" onchange="toggleTheme()">
+            <span class="slider"></span>
+        </label>
+        <span class="theme-icon">🌙</span>
+    </div>
 </nav>
 
 <div class="main-layout">
@@ -286,9 +335,13 @@
         
         <div class="stock-input-group">
             <textarea id="stockInput" rows="4" placeholder="請在此輸入或貼上股票代號。
-支援多筆貼上，可用：逗號(,)、頓號(、)、空格或換行區隔。
+支援多筆處理，可用：逗號(,)、頓號(、)、空格或換行區隔。
 （例如：2330,2454、2317 2882）"></textarea>
-            <button class="btn btn-add" onclick="addStock()">解析並新增至清單</button>
+            
+            <div class="button-row">
+                <button class="btn btn-add" onclick="addStock()">解析並新增至清單</button>
+                <button class="btn btn-batch-delete" onclick="batchDeleteStock()">從清單中批次移除</button>
+            </div>
         </div>
 
         <div class="table-container">
@@ -313,16 +366,22 @@
     let currentTab = 'cathay';
     let stockList = [];
 
-    // 深淺色模式切換
+    // 深淺色模式切換 (由滑動開關觸發)
     function toggleTheme() {
-        document.body.classList.toggle('dark-mode');
-        const isDarkMode = document.body.classList.contains('dark-mode');
-        localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+        const checkbox = document.getElementById('themeCheckbox');
+        if (checkbox.checked) {
+            document.body.classList.add('dark-mode');
+            localStorage.setItem('theme', 'dark');
+        } else {
+            document.body.classList.remove('dark-mode');
+            localStorage.setItem('theme', 'light');
+        }
     }
 
-    // 初始化檢查使用者上次選擇的主題
+    // 初始化檢查使用者上次選擇的主題並設定開關狀態
     if (localStorage.getItem('theme') === 'dark') {
         document.body.classList.add('dark-mode');
+        document.getElementById('themeCheckbox').checked = true;
     }
 
     // 分頁切換功能
@@ -332,66 +391,95 @@
         element.classList.add('active');
     }
 
-    // 解析並新增股票代號
+    // 輔助函式：用來將使用者的輸入文字拆解為乾淨的代號陣列
+    function parseInputText(text) {
+        if (!text) return [];
+        // 支援正則分割：半形逗號(,)、全形逗號(，)、頓號(、)、換行(\n)、空白(\s)
+        return text.split(/[\s,，、\n]+/)
+                   .map(item => item.trim())
+                   .filter(item => item !== '');
+    }
+
+    // 1. 解析並新增股票代號
     function addStock() {
         const stockInput = document.getElementById('stockInput');
         const rawInput = stockInput.value.trim();
 
         if (rawInput === '') {
-            alert('請輸入股票代號！');
+            alert('請在上方文字框輸入欲新增的股票代號！');
             return;
         }
 
-        // 支援正則分割：半形逗號(,)、全形逗號(，)、頓號(、)、換行(\n)、空白(\s)
-        const rawItems = rawInput.split(/[\s,，、\n]+/);
-
+        const rawItems = parseInputText(rawInput);
         let addedCount = 0;
         let errorLengthItems = [];
         let duplicateItems = [];
 
         rawItems.forEach(item => {
-            const cleanedItem = item.trim();
-            if (cleanedItem === '') return; // 濾掉空白項
-
             // 防呆規格檢查：必須剛好為 4 位數純數字
-            if (!/^\d{4}$/.test(cleanedItem)) {
-                errorLengthItems.push(cleanedItem);
+            if (!/^\d{4}$/.test(item)) {
+                errorLengthItems.push(item);
                 return;
             }
 
             // 檢查是否重複輸入
-            if (stockList.includes(cleanedItem)) {
-                duplicateItems.push(cleanedItem);
+            if (stockList.includes(item)) {
+                duplicateItems.push(item);
                 return;
             }
 
-            // 通過驗證，寫入全域陣列
-            stockList.push(cleanedItem);
+            stockList.push(item);
             addedCount++;
         });
 
-        // 清空輸入框並重新渲染表格
-        stockInput.value = '';
+        stockInput.value = ''; // 清空輸入框
         renderTable();
 
-        // 統整提示視窗
+        // 提示訊息
         let alertMessage = '';
-        if (addedCount > 0) {
-            alertMessage += `成功新增 ${addedCount} 筆股票代號。\n`;
-        }
-        if (duplicateItems.length > 0) {
-            alertMessage += `⚠️ 提示：代號 [ ${duplicateItems.join(', ')} ] 已在清單中，已自動忽略。\n`;
-        }
-        if (errorLengthItems.length > 0) {
-            alertMessage += `❌ 錯誤：[ ${errorLengthItems.join(', ')} ] 不符合 4 位數純數字規格，不予匯入。\n`;
-        }
-
-        if (alertMessage !== '') {
-            alert(alertMessage);
-        }
+        if (addedCount > 0) alertMessage += `成功新增 ${addedCount} 筆股票代號。\n`;
+        if (duplicateItems.length > 0) alertMessage += `⚠️ 提示：代號 [ ${duplicateItems.join(', ')} ] 已在清單中，自動忽略。\n`;
+        if (errorLengthItems.length > 0) alertMessage += `❌ 錯誤：[ ${errorLengthItems.join(', ')} ] 不符合 4 位數純數字規格。\n`;
+        
+        if (alertMessage !== '') alert(alertMessage);
     }
 
-    // 刪除單一股票代號
+    // 2. 批次刪除輸入框中的股票代號
+    function batchDeleteStock() {
+        const stockInput = document.getElementById('stockInput');
+        const rawInput = stockInput.value.trim();
+
+        if (rawInput === '') {
+            alert('請在上方文字框輸入欲批量刪除的股票代號！');
+            return;
+        }
+
+        const rawItems = parseInputText(rawInput);
+        let deletedCount = 0;
+        let notFoundItems = [];
+
+        rawItems.forEach(item => {
+            const index = stockList.indexOf(item);
+            if (index !== -1) {
+                stockList.splice(index, 1); // 從陣列中移除
+                deletedCount++;
+            } else {
+                notFoundItems.push(item); // 清單中本來就沒有這顆股票
+            }
+        });
+
+        stockInput.value = ''; // 清空輸入框
+        renderTable();
+
+        // 提示訊息
+        let alertMessage = '';
+        if (deletedCount > 0) alertMessage += `成功從清單中移除 ${deletedCount} 筆股票代號。\n`;
+        if (notFoundItems.length > 0) alertMessage += `ℹ️ 備註：[ ${notFoundItems.join(', ')} ] 本就不在清單中，無須移除。\n`;
+        
+        if (alertMessage !== '') alert(alertMessage);
+    }
+
+    // 刪除個別單一股票代號
     function removeStock(index) {
         stockList.splice(index, 1);
         renderTable();
