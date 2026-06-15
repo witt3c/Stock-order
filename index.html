@@ -277,7 +277,7 @@
             
             <div class="form-group">
                 <label for="dealAcc">銀行代號 (DealAcc)：</label>
-                <input type="text" id="dealAcc" placeholder="請輸入銀行代號">
+                <input type="text" id="dealAcc" placeholder="請輸入銀行代號（例如：XXXX_0000-000000_0">
             </div>
 
             <div class="form-group">
@@ -354,6 +354,11 @@
         currentTab = tabName;
         document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
         element.classList.add('active');
+
+        // 當切換到華南銀行，且目前代號清單已超過 100 筆時，進行警告
+        if (currentTab === 'huanan' && stockList.length > 100) {
+            alert(`⚠️ 注意：華南證券規定批次下單上限為 100 組號碼。\n目前清單內已有 ${stockList.length} 筆，這將導致無法正常匯入華南系統，請手動調整減少筆數。`);
+        }
     }
 
     function parseInputText(text) {
@@ -370,13 +375,22 @@
         let addedCount = 0;
         let errorLengthItems = [];
         let duplicateItems = [];
+        let tempNewItems = [];
 
         rawItems.forEach(item => {
             if (!/^\d{4}$/.test(item)) { errorLengthItems.push(item); return; }
             if (stockList.includes(item)) { duplicateItems.push(item); return; }
-            stockList.push(item);
+            tempNewItems.push(item);
             addedCount++;
         });
+
+        // 檢查加入後是否會超過華南銀行的 100 筆限制
+        if (currentTab === 'huanan' && (stockList.length + tempNewItems.length) > 100) {
+            alert(`⚠️ 警告：華南證券規定批次下單上限為 100 組號碼。\n本次新增後總筆數將達到 ${stockList.length + tempNewItems.length} 筆（已超標），系統仍會協助將代號完整排入清單，請後續自行手動刪除多餘號碼！`);
+        }
+
+        // 實際將資料推入陣列（不協助移除，完全保留）
+        stockList.push(...tempNewItems);
 
         stockInput.value = '';
         renderTable();
@@ -434,6 +448,13 @@
         const dealAccUi = document.getElementById('dealAccUi').value.trim();
         if (!ssId || !dealAcc || !dealAccUi) { alert('請填寫左側完整欄位！'); return; }
         if (stockList.length === 0) { alert('請在右側新增股票代號！'); return; }
+
+        // 下載攔截機制：若是華南銀行且超過 100 筆，強迫攔截不能導出，確保檔案合規性
+        if (currentTab === 'huanan' && stockList.length > 100) {
+            alert(`❌ 無法產生檔案！華南證券單次批次匯入上限為 100 筆。\n目前清單共有 ${stockList.length} 筆，請使用表格右側的「刪除」按鈕手動將數量調整至 100 筆（含）以下再行產生。`);
+            return;
+        }
+
         const safeDealAccUi = escapeXmlChinese(dealAccUi);
         let xmlContent = '<?xml version="1.0" encoding="big5"?>\n<MdjOrdersFile CompactMode="1">\n\t<Orders>\n';
         stockList.forEach(stock => {
