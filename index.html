@@ -143,7 +143,7 @@
 
         /* 主體佈局（左右分欄） */
         .main-container {
-            flex: 1; /* 讓內容撐開，確保頁尾固定在底部 */
+            flex: 1;
             padding: 20px;
         }
 
@@ -254,20 +254,12 @@
             margin-top: 40px;
         }
 
-        .footer-links {
-            margin-top: 5px;
-        }
-
-        .footer-links a {
-            color: var(--footer-link);
-            text-decoration: none;
-            margin: 0 10px;
-        }
-
-        .footer-links a:hover {
-            text-decoration: underline;
-        }
+        .footer-links { margin-top: 5px; }
+        .footer-links a { color: var(--footer-link); text-decoration: none; margin: 0 10px; }
+        .footer-links a:hover { text-decoration: underline; }
     </style>
+    
+    <script src="https://cdn.jsdelivr.net/gh/inexorablewriter/big5@master/dist/big5.js"></script>
 </head>
 <body>
 
@@ -303,8 +295,8 @@
             </div>
 
             <div class="form-group">
-                <label for="dealAccUi">證券帳戶資料 (DealAccUI)：</label>
-                <input type="text" id="dealAccUi" placeholder="請輸入證券帳戶資料">
+                <label for="dealAccUi">證券帳戶資料 (DealAccUI，可含中文)：</label>
+                <input type="text" id="dealAccUi" placeholder="請輸入證券帳戶資料（例如：台北分公司）">
             </div>
 
             <button class="btn btn-submit" onclick="generateXML()">產生並下載 XML 檔案</button>
@@ -444,6 +436,7 @@
         });
     }
 
+    // 產生 XML 並強制以正確的 Big5 編碼二進位流導出
     function generateXML() {
         const ssId = document.getElementById('ssId').value.trim();
         const dealAcc = document.getElementById('dealAcc').value.trim();
@@ -451,6 +444,7 @@
         if (!ssId || !dealAcc || !dealAccUi) { alert('請填寫左側完整欄位！'); return; }
         if (stockList.length === 0) { alert('請在右側新增股票代號！'); return; }
 
+        // 組裝純文字內容
         let xmlContent = '<?xml version="1.0" encoding="big5"?>\n<MdjOrdersFile CompactMode="1">\n\t<Orders>\n';
         stockList.forEach(stock => {
             xmlContent += `\t\t<Order Vol="1" VolMatch="0" VolCancel="0" ActionFlag="0" OrderStatus="0" DP="0" SettleCurrency="0" Price="0.000000" BS="B" Cond="R" DealType="0" TT="11" OT="0" PT="1" Offset="5" Session="0" OFT="16" DealTime="1703606400" OrderDateTime="-1" ConfirmDateTime="-1" ID="${stock}.TW" ID2="" Name="" TSID="CTYAP" EmergeBroker="" EmergeBrokerName="" CreatorAcc="" DealAcc="${dealAcc}" DealAccUI="${dealAccUi}" SSID="${ssId}" IBPT="999" IBCond="999" PriceStop="0.000000" ETT="-1" GTCRule="0" GTCStartTime="0" GTCStopDate="0" GTCStopPrice="0.000000" GTCWebID="" GTCWebSeq="" ChkUI="-1"/>\n`;
@@ -458,7 +452,13 @@
         xmlContent += '\t</Orders>\n</MdjOrdersFile>';
 
         const filename = `${currentTab === 'cathay' ? '國泰證券' : '華南銀行'}_batch_orders.xml`;
-        const blob = new Blob([xmlContent], { type: 'text/xml;charset=utf-8;' });
+        
+        // 【核心修正】：利用引入的 big5.js 套件，將 UTF-8 的字串編碼轉為真正的 Big5 位元陣列 (Uint8Array)
+        // 如此一來瀏覽器輸出的二進位流就會是正宗的大五碼，券商系統讀取中文字絕對不會出現亂碼！
+        const big5Uint8Array = Big5.encode(xmlContent);
+        
+        // 使用二進位數據格式（application/octet-stream）封裝 Blob
+        const blob = new Blob([big5Uint8Array], { type: 'application/octet-stream' });
         const link = document.createElement('a');
         link.href = URL.createObjectURL(blob);
         link.setAttribute('download', filename);
